@@ -199,16 +199,19 @@ const defaultOnRedirectCallback = (appState?: AppState): void => {
  *
  * Provides the Auth0Context to its child components.
  */
-const Auth0Provider = (opts: Auth0ProviderOptions): JSX.Element => {
+export const Auth0ProviderWithClient = (
+  opts: Pick<
+    Auth0ProviderOptions,
+    'skipRedirectCallback' | 'onRedirectCallback' | 'children'
+  > & { client: Auth0Client }
+): JSX.Element => {
   const {
+    client,
     children,
     skipRedirectCallback,
     onRedirectCallback = defaultOnRedirectCallback,
-    ...clientOpts
   } = opts;
-  const [client] = useState(
-    () => new Auth0Client(toAuth0ClientOptions(clientOpts))
-  );
+
   const [state, dispatch] = useReducer(reducer, initialAuthState);
 
   useEffect(() => {
@@ -321,6 +324,29 @@ const Auth0Provider = (opts: Auth0ProviderOptions): JSX.Element => {
     >
       {children}
     </Auth0Context.Provider>
+  );
+};
+
+const Auth0Provider = (opts: Auth0ProviderOptions): JSX.Element => {
+  const {
+    children,
+    skipRedirectCallback,
+    onRedirectCallback,
+    ...clientOpts
+  } = opts;
+
+  const [client] = useState(
+    () => new Auth0Client(toAuth0ClientOptions(clientOpts))
+  );
+
+  return (
+    <Auth0ProviderWithClient
+      client={client}
+      skipRedirectCallback={skipRedirectCallback}
+      onRedirectCallback={onRedirectCallback}
+    >
+      {children}
+    </Auth0ProviderWithClient>
   );
 };
 
